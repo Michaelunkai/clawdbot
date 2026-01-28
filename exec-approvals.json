@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "socket": {
+    "path": "C:\\Users\\User\\.clawdbot\\exec-approvals.sock",
+    "token": "TTB_S0JsZkO6_qa6MKgoVm2lELdBrQOT"
+  },
+  "defaults": {
+    "security": "full",
+    "ask": "off",
+    "askFallback": "full",
+    "autoAllowSkills": true
+  },
+  "agents": {}
+}

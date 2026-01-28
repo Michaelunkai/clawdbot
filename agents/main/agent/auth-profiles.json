@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "profiles": {
+    "anthropic:claude-cli": {
+      "type": "oauth",
+      "provider": "anthropic",
+      "access": "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",
+      "refresh": "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",
+      "expires": 1769632321064
+    },
+    "anthropic:manual": {
+      "type": "token",
+      "provider": "anthropic",
+      "token": "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"
+    }
+  },
+  "lastGood": {
+    "anthropic": "anthropic:claude-cli"
+  },
+  "usageStats": {
+    "anthropic:claude-cli": {
+      "lastUsed": 1769622411998,
+      "errorCount": 0,
+      "lastFailureAt": 1769618939198
+    },
+    "anthropic:manual": {
+      "lastUsed": 1769618939593,
+      "errorCount": 0,
+      "lastFailureAt": 1769618939576
+    }
+  }
+}
