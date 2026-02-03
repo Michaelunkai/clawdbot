@@ -92,6 +92,12 @@ $script:gatewayOutput = ""
 $script:openclawInfo = Get-OpenClawCommand
 $script:productName = "OpenClaw"
 
+# Auto-restart settings
+$script:autoRestartEnabled = $true
+$script:autoRestartMinutes = 90
+$script:autoRestartTimer = $null
+$script:lastAutoRestart = Get-Date
+
 # Create lobster icon (orange crab/lobster style) with status indicator
 function Create-LobsterIcon {
     param([string]$status = "normal") # normal, running, error, warning
@@ -225,6 +231,51 @@ $contextMenu.Items.Add($cleanContextItem) | Out-Null
 $optimizeItem = New-Object System.Windows.Forms.ToolStripMenuItem
 $optimizeItem.Text = "Optimize Connection"
 $contextMenu.Items.Add($optimizeItem) | Out-Null
+
+$contextMenu.Items.Add((New-Object System.Windows.Forms.ToolStripSeparator)) | Out-Null
+
+# Auto-Restart submenu
+$autoRestartMenu = New-Object System.Windows.Forms.ToolStripMenuItem
+$autoRestartMenu.Text = "Auto-Restart (90 min)"
+
+# Enable/Disable toggle
+$autoRestartToggle = New-Object System.Windows.Forms.ToolStripMenuItem
+$autoRestartToggle.Text = "Enabled"
+$autoRestartToggle.Checked = $true
+$autoRestartMenu.DropDownItems.Add($autoRestartToggle) | Out-Null
+
+$autoRestartMenu.DropDownItems.Add((New-Object System.Windows.Forms.ToolStripSeparator)) | Out-Null
+
+# Time interval options
+$interval30 = New-Object System.Windows.Forms.ToolStripMenuItem
+$interval30.Text = "30 minutes"
+$autoRestartMenu.DropDownItems.Add($interval30) | Out-Null
+
+$interval60 = New-Object System.Windows.Forms.ToolStripMenuItem
+$interval60.Text = "60 minutes"
+$autoRestartMenu.DropDownItems.Add($interval60) | Out-Null
+
+$interval90 = New-Object System.Windows.Forms.ToolStripMenuItem
+$interval90.Text = "90 minutes"
+$interval90.Checked = $true
+$autoRestartMenu.DropDownItems.Add($interval90) | Out-Null
+
+$interval120 = New-Object System.Windows.Forms.ToolStripMenuItem
+$interval120.Text = "120 minutes"
+$autoRestartMenu.DropDownItems.Add($interval120) | Out-Null
+
+$interval180 = New-Object System.Windows.Forms.ToolStripMenuItem
+$interval180.Text = "180 minutes"
+$autoRestartMenu.DropDownItems.Add($interval180) | Out-Null
+
+$autoRestartMenu.DropDownItems.Add((New-Object System.Windows.Forms.ToolStripSeparator)) | Out-Null
+
+# Custom interval
+$intervalCustom = New-Object System.Windows.Forms.ToolStripMenuItem
+$intervalCustom.Text = "Custom..."
+$autoRestartMenu.DropDownItems.Add($intervalCustom) | Out-Null
+
+$contextMenu.Items.Add($autoRestartMenu) | Out-Null
 
 $contextMenu.Items.Add((New-Object System.Windows.Forms.ToolStripSeparator)) | Out-Null
 
@@ -716,6 +767,83 @@ function Check-OAuthError {
     return $false
 }
 
+# Auto-restart functions
+function Update-AutoRestartMenu {
+    $statusText = if ($script:autoRestartEnabled) { "Enabled" } else { "Disabled" }
+    $autoRestartMenu.Text = "Auto-Restart ($($script:autoRestartMinutes) min) - $statusText"
+    $autoRestartToggle.Checked = $script:autoRestartEnabled
+    $autoRestartToggle.Text = if ($script:autoRestartEnabled) { "Enabled (click to disable)" } else { "Disabled (click to enable)" }
+
+    # Update interval checkmarks
+    $interval30.Checked = ($script:autoRestartMinutes -eq 30)
+    $interval60.Checked = ($script:autoRestartMinutes -eq 60)
+    $interval90.Checked = ($script:autoRestartMinutes -eq 90)
+    $interval120.Checked = ($script:autoRestartMinutes -eq 120)
+    $interval180.Checked = ($script:autoRestartMinutes -eq 180)
+}
+
+function Set-AutoRestartInterval {
+    param([int]$Minutes)
+    $script:autoRestartMinutes = $Minutes
+    $script:lastAutoRestart = Get-Date
+    Update-AutoRestartMenu
+
+    if ($script:autoRestartEnabled) {
+        $trayIcon.BalloonTipIcon = [System.Windows.Forms.ToolTipIcon]::Info
+        $trayIcon.BalloonTipTitle = "$script:productName Auto-Restart"
+        $trayIcon.BalloonTipText = "Gateway will auto-restart every $Minutes minutes"
+        $trayIcon.ShowBalloonTip(2000)
+    }
+}
+
+function Toggle-AutoRestart {
+    $script:autoRestartEnabled = -not $script:autoRestartEnabled
+    $script:lastAutoRestart = Get-Date
+    Update-AutoRestartMenu
+
+    $statusText = if ($script:autoRestartEnabled) { "enabled" } else { "disabled" }
+    $trayIcon.BalloonTipIcon = [System.Windows.Forms.ToolTipIcon]::Info
+    $trayIcon.BalloonTipTitle = "$script:productName Auto-Restart"
+    $trayIcon.BalloonTipText = "Auto-restart $statusText (every $($script:autoRestartMinutes) min)"
+    $trayIcon.ShowBalloonTip(2000)
+}
+
+function Show-CustomIntervalDialog {
+    Add-Type -AssemblyName Microsoft.VisualBasic
+    $result = [Microsoft.VisualBasic.Interaction]::InputBox(
+        "Enter auto-restart interval in minutes (10-1440):",
+        "$script:productName Auto-Restart Interval",
+        $script:autoRestartMinutes.ToString()
+    )
+
+    if ($result -and $result -match '^\d+$') {
+        $minutes = [int]$result
+        if ($minutes -ge 10 -and $minutes -le 1440) {
+            Set-AutoRestartInterval -Minutes $minutes
+        } else {
+            [System.Windows.Forms.MessageBox]::Show(
+                "Invalid interval. Please enter a value between 10 and 1440 minutes.",
+                "$script:productName", "OK", "Warning"
+            )
+        }
+    }
+}
+
+function Do-AutoRestart {
+    if (-not $script:autoRestartEnabled) { return }
+    if ($script:oauthError -or $script:reauthInProgress) { return }
+
+    $script:lastAutoRestart = Get-Date
+    Update-Status "Auto-restarting..." "Scheduled restart" "warning"
+
+    $trayIcon.BalloonTipIcon = [System.Windows.Forms.ToolTipIcon]::Info
+    $trayIcon.BalloonTipTitle = "$script:productName Auto-Restart"
+    $trayIcon.BalloonTipText = "Performing scheduled restart (every $($script:autoRestartMinutes) min)"
+    $trayIcon.ShowBalloonTip(2000)
+
+    Restart-Gateway
+}
+
 # Event handlers
 $startItem.Add_Click({ Start-Gateway })
 $stopItem.Add_Click({ Stop-Gateway })
@@ -727,6 +855,15 @@ $doctorItem.Add_Click({ Run-Doctor })
 $dashboardItem.Add_Click({ Open-Dashboard })
 $cleanContextItem.Add_Click({ Clean-AllContext })
 $optimizeItem.Add_Click({ Optimize-Connection })
+
+# Auto-restart event handlers
+$autoRestartToggle.Add_Click({ Toggle-AutoRestart })
+$interval30.Add_Click({ Set-AutoRestartInterval -Minutes 30 })
+$interval60.Add_Click({ Set-AutoRestartInterval -Minutes 60 })
+$interval90.Add_Click({ Set-AutoRestartInterval -Minutes 90 })
+$interval120.Add_Click({ Set-AutoRestartInterval -Minutes 120 })
+$interval180.Add_Click({ Set-AutoRestartInterval -Minutes 180 })
+$intervalCustom.Add_Click({ Show-CustomIntervalDialog })
 
 $exitItem.Add_Click({
     Stop-Gateway
@@ -882,6 +1019,22 @@ $stabilityTimer.Add_Tick({
     }
 })
 $stabilityTimer.Start()
+
+# Auto-restart timer - checks every minute if it's time to restart
+$autoRestartCheckTimer = New-Object System.Windows.Forms.Timer
+$autoRestartCheckTimer.Interval = 60000  # Check every minute
+$autoRestartCheckTimer.Add_Tick({
+    if ($script:autoRestartEnabled -and $script:enabled -and -not $script:oauthError -and -not $script:reauthInProgress) {
+        $elapsed = (Get-Date) - $script:lastAutoRestart
+        if ($elapsed.TotalMinutes -ge $script:autoRestartMinutes) {
+            Do-AutoRestart
+        }
+    }
+})
+$autoRestartCheckTimer.Start()
+
+# Initialize auto-restart menu display
+Update-AutoRestartMenu
 
 # Run message loop
 [System.Windows.Forms.Application]::Run()
