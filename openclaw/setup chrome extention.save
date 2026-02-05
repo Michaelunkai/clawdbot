@@ -1,0 +1,12 @@
+ openclaw browser extension install
+
+🦞 OpenClaw 2026.2.1 (ed4529e) — If it works, it's automation; if it breaks, it's a "learning opportunity."
+
+C:\Users\micha\.openclaw\browser\chrome-extension
+Copied to clipboard.
+Next:
+- Chrome → chrome://extensions → enable “Developer mode”
+- “Load unpacked” → select: C:\Users\micha\.openclaw\browser\chrome-extension
+- Pin “OpenClaw Browser Relay”, then click it on the tab (badge shows ON)
+
+Docs: docs.openclaw.ai/tools/chrome-extension
