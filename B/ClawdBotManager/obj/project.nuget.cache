@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "dgSpecHash": "dHfdUEyNa84=",
+  "success": true,
+  "projectFilePath": "F:\\study\\AI_ML\\AI_and_Machine_Learning\\Artificial_Intelligence\\cli\\claudecode\\wrappers\\ClawdBot\\B\\ClawdBotManager\\ClawdBotManager.csproj",
+  "expectedPackageFiles": [
+    "F:\\DevKit\\sdk\\dotnet\\.nuget\\packages\\microsoft.net.illink.tasks\\8.0.23\\microsoft.net.illink.tasks.8.0.23.nupkg.sha512",
+    "F:\\DevKit\\sdk\\dotnet\\.nuget\\packages\\microsoft.netcore.app.runtime.win-x64\\8.0.23\\microsoft.netcore.app.runtime.win-x64.8.0.23.nupkg.sha512",
+    "F:\\DevKit\\sdk\\dotnet\\.nuget\\packages\\microsoft.windowsdesktop.app.runtime.win-x64\\8.0.23\\microsoft.windowsdesktop.app.runtime.win-x64.8.0.23.nupkg.sha512",
+    "F:\\DevKit\\sdk\\dotnet\\.nuget\\packages\\microsoft.aspnetcore.app.runtime.win-x64\\8.0.23\\microsoft.aspnetcore.app.runtime.win-x64.8.0.23.nupkg.sha512"
+  ],
+  "logs": []
+}

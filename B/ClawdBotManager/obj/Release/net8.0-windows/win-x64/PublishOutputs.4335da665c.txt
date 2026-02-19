@@ -1,0 +1,2 @@
+F:\study\AI_ML\AI_and_Machine_Learning\Artificial_Intelligence\cli\claudecode\wrappers\ClawdBot\B\publish\ClawdBotManager.pdb
+F:\study\AI_ML\AI_and_Machine_Learning\Artificial_Intelligence\cli\claudecode\wrappers\ClawdBot\B\publish\ClawdBotManager.exe
